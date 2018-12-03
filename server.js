@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const app = express();
+const cors = require('cors');
 
 /**
  * -----------------------------------------
@@ -38,16 +39,7 @@ httpRouter.get('*', function(req, res){
 var httpServer = http.createServer(httpApp);
 httpServer.listen(8080, (err) => {console.log(err || `http serveris running on port: 8080`)});
 
-app.get('/', (req, res) => {
-  console.log('**https request: ')
-  console.log(req.get('Host'))
-  console.log(req.url)
-  res.status(200).send('ok');
-})
 
-server.listen(PORT, (err) => {
-  console.log(err || `Media Server is running on PORT: ${PORT}`);
-})
 
 /**
  * -----------------------------------------
@@ -62,7 +54,7 @@ const OBS = require('./obs/lib/obs');
 const obsClient = new OBS({
        access_key_id: 'GV7WGSYA1WGPVIZO8RC3',
        secret_access_key: 'LSs1AfwNFH6onTpyfW2GmKRYCXWQP9Q3FOVZPPEk',
-       server : 'https://media.mofaqua.com:8000', // 连接OBS的服务地址。可包含协议类型、域名、端口号
+       server : 'https://obs.cn-north-1.myhwclouds.com', // 连接OBS的服务地址。可包含协议类型、域名、端口号
       //  server: 'https://localhost:8000',
        max_retry_count: 5,
        timeout: 120,
@@ -98,28 +90,89 @@ obsClient.headBucket({Bucket: bucket}, (err, result) => {
 
 
 // listBuckets
-// obsClient.listBuckets({QueryLocation: true},(err, result) => {
-//   if(err){
-//     console.error('Error-->' + err);
-//   }else{
-//     if(result.CommonMsg.Status < 300){ 
-//       console.log('RequestId-->' + result.InterfaceResult.RequestId); 
-//       console.log('Owner:');
-//       console.log('ID-->' + result.InterfaceResult.Owner.ID); 
-//       console.log('Name-->' + result.InterfaceResult.Owner.Name); 
-//       console.log('Buckets:'); 
-//       for(let i=0;i<result.InterfaceResult.Buckets.Bucket.length;i++){ 
-//         console.log('Bucket[' + i + ']:');
-//         console.log('BucketName-->' + result.InterfaceResult.Buckets[i].BucketName); 
-//         console.log('CreationDate-->' + result.InterfaceResult.Buckets[i].CreationDate);
-//         console.log('Location-->' + result.InterfaceResult.Buckets[i].Location); 
-//       } 
-//     }else{
-//       console.log('Code-->' + result.CommonMsg.Code);
-//       console.log('Message-->' + result.CommonMsg.Message); 
-//     }
-//   }
-// });
+obsClient.listBuckets({QueryLocation: true},(err, result) => {
+  if(err){
+    console.error('Error-->' + err);
+  }else{
+    if(result.CommonMsg.Status < 300){ 
+      console.log('RequestId-->' + result.InterfaceResult.RequestId); 
+      console.log('Owner:');
+      console.log('ID-->' + result.InterfaceResult.Owner.ID); 
+      console.log('Name-->' + result.InterfaceResult.Owner.Name); 
+      console.log('Buckets:'); 
+      for(let i=0;i<result.InterfaceResult.Buckets.length;i++){ 
+        console.log('Bucket[' + i + ']:');
+        console.log('BucketName-->' + result.InterfaceResult.Buckets[i].BucketName); 
+        console.log('CreationDate-->' + result.InterfaceResult.Buckets[i].CreationDate);
+        console.log('Location-->' + result.InterfaceResult.Buckets[i].Location); 
+      } 
+    }else{
+      console.log('Code-->' + result.CommonMsg.Code);
+      console.log('Message-->' + result.CommonMsg.Message); 
+    }
+  }
+});
+app.use(cors());
+app.disable('etag')
+app.disable('x-powered-by');
+
+app.get('/:id/manifest/:file', (req, res) => {
+
+  obsClient.getObject({
+    Bucket: bucket,
+    Key: `obs-manifest/${req.params.id}/${req.params.file}`, //req.params.file,
+    SaveAsStream: true
+  }, (err, result) => {
+    if (err) return res.status(404).send(err);
+    else {
+      if(result.CommonMsg.Status < 300) {
+        // res.status(200).send();
+        result.InterfaceResult.Content.pipe(res);
+        // console.log(result.InterfaceResult.Content)
+      }else {
+        res.status(403).send({
+          code: result.CommonMsg.Code,
+          err: result.CommonMsg.Message
+        })
+      }
+    }
+  })
+})
+
+app.get('/video/:file', (req, res) => {
+
+  obsClient.getObject({
+    Bucket: bucket,
+    Key: `${req.params.file}`, //req.params.file,
+    SaveAsStream: true
+  }, (err, result) => {
+    if (err) return res.status(404).send(err);
+    else {
+      if(result.CommonMsg.Status < 300) {
+        // res.status(200).send();
+        result.InterfaceResult.Content.pipe(res);
+        // console.log(result.InterfaceResult.Content)
+      }else {
+        res.status(403).send({
+          code: result.CommonMsg.Code,
+          err: result.CommonMsg.Message
+        })
+      }
+    }
+  })
+})
+
+
+app.get('/', (req, res) => {
+  console.log('**https request: ')
+  console.log(req.get('Host'))
+  console.log(req.url)
+  res.status(200).send('ok');
+})
+
+server.listen(PORT, (err) => {
+  console.log(err || `Media Server is running on PORT: ${PORT}`);
+})
 
 
 
