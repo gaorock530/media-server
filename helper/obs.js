@@ -13,7 +13,6 @@ const obsClient = new OBS({
        access_key_id: 'GV7WGSYA1WGPVIZO8RC3',
        secret_access_key: 'LSs1AfwNFH6onTpyfW2GmKRYCXWQP9Q3FOVZPPEk',
        server : 'https://obs.cn-north-1.myhwclouds.com', // 连接OBS的服务地址。可包含协议类型、域名、端口号
-      //  server: 'https://localhost:8000',
        max_retry_count: 5,
        timeout: 120,
        ssl_verify: false,

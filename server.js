@@ -11,7 +11,7 @@ const bodyParser = require('body-parser');
 app.disable('etag');
 app.disable('x-powered-by');
 // solve cross origin control
-var whitelist = ['http://websocket.mofaqua.com'];
+var whitelist = ['http://localhost:3000','http://websocket.mofaqua.com'];
 var corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1 || !origin) {
@@ -59,28 +59,6 @@ var httpServer = http.createServer(httpApp);
 httpServer.listen(8080, (err) => {console.log(err || `http serveris running on port: 8080`)});
 
 
-
-/**
- * -----------------------------------------
- * OBS initialize
- * -----------------------------------------
- */
-// const bucket = 'obs-b704';
-// // 引入obs库
-// const obs = require('./obs/lib/obs');
-
-// // 创建ObsClient实例
-// const obsClient = new OBS({
-//        access_key_id: 'GV7WGSYA1WGPVIZO8RC3',
-//        secret_access_key: 'LSs1AfwNFH6onTpyfW2GmKRYCXWQP9Q3FOVZPPEk',
-//        server : 'https://obs.cn-north-1.myhwclouds.com', // 连接OBS的服务地址。可包含协议类型、域名、端口号
-//       //  server: 'https://localhost:8000',
-//        max_retry_count: 5,
-//        timeout: 120,
-//        ssl_verify: false,
-//        long_conn_param: 0 //长连接模式参数（单位：秒）。当该参数大于等于0时，开启长连接模式，并将该参数作为TCP Keep-Alive数据包的初始延迟。
-
-// });
 // 1.1 	日志初始化
 // const parameter = {
 //   name: 'obs_woking_log', 
@@ -145,9 +123,12 @@ app.get('/manifest/:quality/:hash/:file', async (req, res) => {
   }
 })
 
+
+
 // get video screenshot
 app.get('/cover/:hash', async (req, res) => {
   console.log('referer:', req.headers.referer || 'no referer');
+
   try{
     const file = await obs.getFile(`screenshots/${req.params.hash}.jpg`);
     res.setHeader('Server', 'Magic');
