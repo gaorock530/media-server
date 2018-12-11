@@ -147,7 +147,7 @@ app.get('/manifest/:quality/:hash/:file', async (req, res) => {
 
 // get video screenshot
 app.get('/cover/:hash', async (req, res) => {
-  console.log(req.headers);
+  console.log('referer:', req.headers.referer || 'no referer');
   try{
     const file = await obs.getFile(`screenshots/${req.params.hash}.jpg`);
     res.setHeader('Server', 'Magic');
