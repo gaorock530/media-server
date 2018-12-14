@@ -133,11 +133,11 @@ const schema = new mongoose.Schema({
   // after upload(ed) a file
   upload: [
     {
-      date: {type: Date, required: true},     // record upload success timestamp
-      hash: {type: String, required: true},   // record file hash
-      stage: {type: Number, required: true},  // record upload stage 0-uploading 1-uploaded 2-converted 3-manifest 4-done
-      ext: {type: String, required: true},    // record original file's extension
-      info: {type: Object},                   // record file metadata like quality and bitrate
+      uploadDate: {type: Date, required: true}, // record upload success timestamp
+      hash: {type: String, required: true},     // record file hash
+      stage: {type: Number, required: true},    // record upload stage 0-uploading 1-uploaded 2-converted 3-manifest 4-done
+      ext: {type: String, required: true},      // record original file's extension
+      info: {type: Object},                     // record file metadata like quality and bitrate
       task_id: {type: Number}
     }
   ], 
@@ -260,7 +260,7 @@ schema.methods.uploadTracking = async function (hash, stage, extension, info) {
   switch(stage) {
     case 0: // before uploading to obs
       user.upload.push({
-        date: ConvertUTCTimeToLocalTime(),
+        uploadDate: ConvertUTCTimeToLocalTime(),
         hash,
         stage,
         ext: extension

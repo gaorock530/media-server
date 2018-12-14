@@ -1,5 +1,11 @@
 /**
  * @description Stage - 1 : Uploading
+ * @emits 1. checking file mimetype and extension
+ * @emits 2. checking file size
+ * @emits 3. checking video duration
+ * @emits 4. checking video quality
+ * @emits 5. generating video screenshot
+ * @emits 6. uploading video and screenshot to OBS
  */
 const path = require('path');
 const fs = require('fs');
