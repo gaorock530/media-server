@@ -53,11 +53,11 @@ module.exports = async (req, res) => {
   let user;
   try {
     user = await USER.findOne({UID: req.body.uid});
-    if (!user.uploadMonitor || user.uploadMonitor.permit !== req.body.permit) return res.status(401).send();
+    if (!user.uploadMonitor || user.uploadMonitor.permit !== req.body.permit) return res.status(401).send({err: 'no permit'});
     if (user.uploadMonitor.inProcess) return res.status(200).send({err: 'uploading in process'});
   }catch(e) {
     // no such user exists(invaild UID)
-    return res.status(401).send();
+    return res.status(401).send({err: 'no user found'});
   }
   // tracking current file uploading stage
   const notexist = await user.uploadTracking(hash, 0, extension);
