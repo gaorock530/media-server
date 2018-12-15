@@ -1,3 +1,13 @@
+'use strict';
+/**
+ * @name ReefMagic-MediaServer
+ * @author Magic
+ * @description the main entry file, starts server
+ * @version 0.0.1
+ */
+// load config.json
+require('./config');
+
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
@@ -7,6 +17,7 @@ const app = express();
 const cors = require('cors');
 const upload = require('express-fileupload');
 const bodyParser = require('body-parser');
+
 
 app.disable('etag');
 app.disable('x-powered-by');
@@ -56,59 +67,8 @@ httpRouter.get('*', function(req, res){
     return res.status(301).redirect(destination);
 });
 var httpServer = http.createServer(httpApp);
-httpServer.listen(8080, (err) => {console.log(err || `http serveris running on port: 8080`)});
+httpServer.listen(8080, (err) => {console.log(err || `http server is running on port: 8080`)});
 
-
-// 1.1 	日志初始化
-// const parameter = {
-//   name: 'obs_woking_log', 
-//   file_full_path:'./logs/OBS-SDK.log', 
-//   max_log_size:20480, 
-//   backups:10, 
-//   level:'info',
-//   log_to_console:false 
-// }
-// obsClient.initLog(parameter);
-
-// find Bucket
-// obsClient.headBucket({Bucket: bucket}, (err, result) => {
-//   if (err) {
-//     console.error('Error-->' + err);
-//   }else {
-//     if(result.CommonMsg.Status < 300){
-//       console.log('Bucket exists'); 
-//     }else if(result.CommonMsg.Status === 404){
-//       console.log('Bucket does not exist'); 
-//     } 
-      
-//   }
-// })
-
-
-
-// listBuckets
-// obsClient.listBuckets({QueryLocation: true},(err, result) => {
-//   if(err){
-//     console.error('Error-->' + err);
-//   }else{
-//     if(result.CommonMsg.Status < 300){ 
-//       console.log('RequestId-->' + result.InterfaceResult.RequestId); 
-//       console.log('Owner:');
-//       console.log('ID-->' + result.InterfaceResult.Owner.ID); 
-//       console.log('Name-->' + result.InterfaceResult.Owner.Name); 
-//       console.log('Buckets:'); 
-//       for(let i=0;i<result.InterfaceResult.Buckets.length;i++){ 
-//         console.log('Bucket[' + i + ']:');
-//         console.log('BucketName-->' + result.InterfaceResult.Buckets[i].BucketName); 
-//         console.log('CreationDate-->' + result.InterfaceResult.Buckets[i].CreationDate);
-//         console.log('Location-->' + result.InterfaceResult.Buckets[i].Location); 
-//       } 
-//     }else{
-//       console.log('Code-->' + result.CommonMsg.Code);
-//       console.log('Message-->' + result.CommonMsg.Message); 
-//     }
-//   }
-// });
 
 const obs = require('./helper/obs');
 
@@ -149,7 +109,7 @@ app.get('/cover/:hash', async (req, res) => {
 app.post('/videoupload', upload({createParentPath: true}), (req, res) => {
   if (!req.body.uid || !req.body.permit || !req.body.stage || (req.body.stage.toString() === '1' && !req.files))
   return res.status(401).send({err: 'body'});
-
+  console.log('coming POST request on Upload')
   switch(req.body.stage.toString()) {
     case '1':
       return require('./upload/stage1')(req, res);

@@ -1,0 +1,28 @@
+{
+  "development": {
+    "PORT": 8000,
+    "MONGODB_URI": "mongodb://magic:123456@localhost:27017/magic",
+    "ORIGINS": [
+      "http://127.0.0.1:3001",
+      "http://localhost:3001", 
+      "http://192.168.1.100:3001",
+      "http://localhost:3000"
+    ],
+    "HOST": "https://localhost:5000"
+  },
+  "production": {
+    "PORT": 8000,
+    "MONGODB_URI": "mongodb://magic:123456@139.159.161.189:27017/magic",
+    "ORIGINS": [
+      "http://aquamofa.com",
+      "http://mofaqua.com", 
+      "http://yingxitech.com",
+      "http://shadowstrike.tv",
+      "https://aquamofa.com",
+      "https://mofaqua.com", 
+      "https://yingxitech.com",
+      "https://shadowstrike.tv"
+    ],
+    "HOST": "https://websocket.mofaqua.com"
+  }
+}

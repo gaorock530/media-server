@@ -143,9 +143,9 @@ const schema = new mongoose.Schema({
   ], 
   // enter upload page
   uploadMonitor: {
-    lastRequest: {type: Date, required: true},  // record last uploading request timestamp (detecting over requesting)
-    permit: {type: String, required: true},     // store a permit string for client upload
-    inProcess: {type: Boolean, required: true}
+    lastRequest: {type: Date},  // record last uploading request timestamp (detecting over requesting)
+    permit: {type: String},     // store a permit string for client upload
+    inProcess: {type: Boolean}
   }
 }); 
 
