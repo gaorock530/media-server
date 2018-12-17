@@ -63,7 +63,8 @@ function transcode (input, output, quality) {
       },
     "trans_template_id": [quality],
   });
-  const commend = `-jar /Users/magic/Documents/java/signapi/out/artifacts/signapi_jar/signapi.jar ${body}`;
+  const commendPath = path.join(__dirname, '../java');
+  const commend = `-jar ${commendPath}/signapi.jar ${body}`;
   console.log(commend);
   let count = 0;
   return new Promise((resolve, reject) => {
