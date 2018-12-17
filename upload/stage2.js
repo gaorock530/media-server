@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
   let user;
   try {
     user = await USER.findOne({UID: req.body.uid});
-    if (!user.uploadMonitor || user.uploadMonitor.permit !== req.body.permit) return res.status(401).send();
+    if (!user.uploadMonitor || user.uploadMonitor.permit !== req.body.permit) return res.status(401).send({err: 'no permit at stage 2'});
   }catch(e) {
     // no such user exists(invaild UID)
     return res.status(401).send({err: 'user not found'});
@@ -40,9 +40,8 @@ module.exports = async (req, res) => {
   console.log(quality);
   try {
     const result = await transcode(input, output, quality);
-    await user.uploadTracking(req.body.hash, 3, null, 1123123);//result.task_id
-    await user.uploadTracking(req.body.hash, 4);
-    res.status(200).send(result);
+    await user.uploadTracking(req.body.hash, 3, null, result.task_id); // result.task_id
+    res.status(200).send({...file});
   }catch(e) {
     console.log(e)
     res.status(200).send({err: '转码失败'});

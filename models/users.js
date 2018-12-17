@@ -9,7 +9,7 @@ const {b64_sha256} = require('../helper/sha256');
 const {checkPass} = require('../helper/utils');
 const _ = require('lodash');
 const ConvertUTCTimeToLocalTime = require('../helper/timezone');
-mongoose.connect('mongodb://magic:123456@localhost:27017/magic', { useNewUrlParser: true });
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true });
 const schema = new mongoose.Schema({
   /*-----------------------------------------------
     Basic feilds
@@ -154,115 +154,26 @@ const schema = new mongoose.Schema({
  * @description Class methods on USER
  */
 
-// Class method for generate Token
-schema.methods.generateAuthToken = function (ip, client, expires) {
-  const user = this;
-  // user access level - {USER, ADMIN(trade, topics), SUPER, OWNER}
-  const access = user.person.auth;
-  expires = expires?ConvertUTCTimeToLocalTime(true, false, expires):ConvertUTCTimeToLocalTime(true, false);
-  if (!ip || !client) throw 'Missing....{ip, client}';
-  // make hash value of IP + Client
-  const hash = b64_sha256(hex_md5(ip + client));
-  let token = jwt.sign({
-    _id: user._id.toHexString(),  // user_id: 5ad63292c1bedd0c9378af0a
-    access,                       // access level: 2
-    hash,                         // hash contains IP + Client: pKDcCf+HJX+vJLStdNPPgJp1RtVSiDLN3JM0KL7hSKQ
-    expires                       // token expires timestamp: 1524618158943
-  }, process.env.JWT_SECRET);
-
-  // push Token with something into user Tokens Array
-  user.tokens.push({
-    loginTime: ConvertUTCTimeToLocalTime(true),
-    location: '',
-    access, token, expires
-  });
-  // save user
-  return user.save().then(() => {
-    return token
-  }).catch((e)=>{
-    throw e
-  });
-}
-
-schema.methods.removeToken = function (token) {
-  const user = this;
-  return user.update({
-    $pull: {
-      tokens: {token}
-    }
-  });
-}
-
-schema.methods.refreshToken = function () {
-  const user = this;
-  return user.update(
-    { $pull: {tokens: { expires: { $lte: ConvertUTCTimeToLocalTime(true) } } } },
-    { multi: true }
-  )
-}
-
-schema.methods.recordEvent = function (event, log, by) {
-  let user = this;
-  user.records.push({event, log, date: ConvertUTCTimeToLocalTime(true), by});
-  return user.save().then().catch(e => {throw e});
-}
-
-
-schema.methods.verifyPassword = async function (password) {
-  console.log('verifyPassword 1.', this.password);
-  try {
-    const pass = await bcrypt.compare(password, this.password.value);
-    console.log('verifyPassword 2.', pass);
-    if (!pass) return false;
-    return true;
-  }catch(e) {
-    console.log('verifyPassword 3.',e);
-    return false;
-  }
-}
-
-schema.methods.updatePassword = async function (newpass) {
-  let user = this;
-  user.password.value = newpass;
-  user.password.secure = checkPass(newpass);
-  return user.save().then().catch(e => {throw e});
-}
-
-// make a new permit every 5 minutes
-schema.methods.generatePermit = async function () {
-  const user = this;
-  if (!user.uploadMonitor) user.uploadMonitor = {};
-  console.log(Date.now() - user.uploadMonitor.lastRequest);
-  if (!user.uploadMonitor.lastRequest || Date.now() - user.uploadMonitor.lastRequest > 5*60*1000) {
-    const permit = cuid();
-    user.uploadMonitor.lastRequest = Date.now();
-    user.uploadMonitor.permit = permit;
-    await user.save();
-    return permit;
-  } else {
-    return user.uploadMonitor.permit;
-  }
-}
 
 schema.methods.uploadTracking = async function (hash, stage, extension, info) {
   console.log(extension || 'not stage 1')
   const user = this;
-  let error = false;
   let record = null;
-  user.upload.map(upload => {
-    if (upload.hash && upload.hash === hash) {
-      error = true;
-    }
-    return upload;
-  });
-  if (stage === 0 && error) return false;
-
+  
   switch(stage) {
     case 0: // before uploading to obs
+      let exist = false;
+      user.upload.map(upload => {
+        if (upload.hash && upload.hash === hash) {
+          exist = true;
+        }
+        return upload;
+      });
+      if (exist) return false;
       user.upload.push({
         uploadDate: ConvertUTCTimeToLocalTime(),
         hash,
-        stage,
+        stage,      // 0
         ext: extension
       });
       user.uploadMonitor.inProcess = true;
@@ -271,7 +182,7 @@ schema.methods.uploadTracking = async function (hash, stage, extension, info) {
       user.upload = user.upload.map(upload => {
         if (upload.hash && upload.hash === hash) {
           upload.info = {...info};
-          upload.stage = 1;
+          upload.stage = stage; // 1
         }
         return upload;
       });
@@ -279,25 +190,28 @@ schema.methods.uploadTracking = async function (hash, stage, extension, info) {
     case 2: // before start making manifest task
       user.upload = user.upload.map(upload => {
         if (upload.hash && upload.hash === hash) {
-          upload.stage = 2;
+          upload.stage = stage; // 2
           record = upload;
         }
         return upload;
       });
+      console.log('record:', record)
       await user.save();
-      return record;
+      return record._doc;
+      
     case 3: // after start making manifest task
       user.upload = user.upload.map(upload => {
         if (upload.hash && upload.hash === hash) {
-          upload.stage = 3;
-          upload.task_id = info;
+          upload.stage = stage; // 3
+          upload.task_id = info; // info is equals task_id
         }
         return upload;
       });
       user.uploadMonitor.inProcess = false;
       return user.save();
+    // when transcoding is all done, delete record
     default:
-      return user.update({
+      return user.updateOne({
         $pull: {
           upload: {hash}
         }

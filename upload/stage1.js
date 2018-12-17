@@ -89,7 +89,13 @@ module.exports = async (req, res) => {
       await obs.saveFile(`original/${nameForCopy}`, dest);
       await obs.saveFile(`screenshots/${hash}.jpg`, screenshotPath);
       // update uploading stage
-      await user.uploadTracking(hash, 1, null, {quality: analysed.type, bitrate: meta.video_bitRate});
+      await user.uploadTracking(hash, 1, null, {
+        quality: analysed.type, 
+        bitrate: meta.video_bitRate, 
+        name: file.name, 
+        size: file.data.length,
+        duration: meta.video_duration
+      });
       fs.unlink(dest, () => {});
       fs.unlink(screenshotPath, () => {});
       return res.status(200).send({hash});
