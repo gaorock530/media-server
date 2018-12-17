@@ -22,7 +22,7 @@ const bodyParser = require('body-parser');
 app.disable('etag');
 app.disable('x-powered-by');
 // solve cross origin control
-var whitelist = ['http://localhost:3000', 'http://websocket.mofaqua.com', 'https://www.mofaqua.com'];
+var whitelist = ['http://localhost:3000', 'http://websocket.mofaqua.com', 'https://www.mofaqua.com', 'https://mofaqua.com'];
 var corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1 || !origin) {
